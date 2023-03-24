@@ -75,11 +75,11 @@
     private int CalcTime(Circuit circuit, RaceTeam team, RaceDriver driver)
     {
         return (int)(circuit.OptimalLaptimeMs *
-            (
-                (1 + ((100 - team.Rating) * 0.05)) +
-                (1 + ((100 - driver.Rating) * 0.05))
+            (1+(
+                (((100 - team.Rating) * 0.002)) +
+                (((100 - driver.QualifyPace) * 0.002))
 
-            )
+            ))
         );
     }
 
