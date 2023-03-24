@@ -6,22 +6,22 @@ using System.Net;
 
 namespace ApiIsolated
 {
-    public class GetTeams
+    public class GetCircuits
     {
         private readonly ILogger _logger;
         private readonly IRepository _repository;
 
-        public GetTeams(ILoggerFactory loggerFactory, IRepository repository)
+        public GetCircuits(ILoggerFactory loggerFactory, IRepository repository)
         {
-            _logger = loggerFactory.CreateLogger<GetTeams>();
+            _logger = loggerFactory.CreateLogger<GetCircuits>();
             _repository = repository;
         }
 
-        [Function("teams")]
+        [Function("circuits")]
         public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req)
         {
             var response = req.CreateResponse(HttpStatusCode.OK);
-            response.WriteAsJsonAsync(_repository.GetTeams());
+            response.WriteAsJsonAsync(_repository.GetCircuits());
 
             return response;
         }

@@ -1,4 +1,6 @@
-﻿namespace BlazorApp.Shared.Models
+﻿using System.Collections.Generic;
+
+namespace BlazorApp.Shared.Models
 {
     public class RaceTeam
     {
@@ -8,6 +10,8 @@
         public int Chassis { get; set; }
         public int Durability { get; set; }
 
-        public int Rating => ((Engine+Aero+Chassis)/3);
+        public double Rating => (double)((Engine+Aero+Chassis)/3);
+
+        public List<RaceDriver> Drivers { get; set; } = new List<RaceDriver>();
     }
 }

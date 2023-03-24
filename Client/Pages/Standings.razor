@@ -21,7 +21,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var team in teams)
+            @foreach (var team in teams.OrderByDescending(d => d.Rating))
             {
                 <tr>
                     <td>@team.Name</td>
@@ -40,7 +40,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var driver in drivers)
+            @foreach (var driver in drivers.OrderByDescending(d => d.Rating))
             {
                 <tr>
                     <td>@driver.Name</td>
@@ -60,7 +60,8 @@ else
         try
         {
             teams = await Http.GetFromJsonAsync<RaceTeam[]>("/api/teams") ?? new RaceTeam[] { };
-            // drivers = await Http.GetFromJsonAsync<List<RaceDriver>>("/api/drivers") ?? new List<RaceDriver>();
+            drivers = await Http.GetFromJsonAsync<List<RaceDriver>>("/api/drivers") ?? new List<RaceDriver>();
+            this.StateHasChanged();
         }
         catch (Exception ex)
         {
