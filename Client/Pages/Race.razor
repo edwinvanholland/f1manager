@@ -1,0 +1,100 @@
+﻿@page "/race"
+@using BlazorApp.Shared.Models
+@inject HttpClient Http
+
+<PageTitle>Race</PageTitle>
+
+<h1>Raceday!</h1>
+<h2>@_currentCircuit.Name (@_currentCircuit.Country)</h2>
+
+<button class="btn btn-primary" @onclick="SimulateQualify">Simulate Qualify</button>
+
+@if (_qualifyResults != null && _qualifyResults.Any())
+{
+    <h2>Qualify Results</h2>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Driver</th>
+                <th>Team</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var rank = 1;
+            }
+            @foreach (var result in _qualifyResults.OrderBy(q => q.TimeMs))
+            {
+                <tr>
+                    <td>@rank</td>
+                    <td>@result.Driver.Name</td>
+                    <td>@result.Team.Name</td>
+                    <td>@RenderLaptime(result.TimeMs)</td>
+                </tr>
+                rank++;
+            }
+        </tbody>
+    </table>
+}
+
+
+
+@code {
+    private int currentCount = 0;
+    private Circuit _currentCircuit = new Circuit();
+    private RaceTeam[] teams = new RaceTeam[] { };
+    private List<QualifyResult> _qualifyResults = new();
+
+    private string RenderLaptime(int laptimeInMs)
+    {
+        var t = TimeSpan.FromMilliseconds(laptimeInMs);
+        return String.Format("{0:D2}:{1:D2}.{2:D3}", t.Minutes, t.Seconds, t.Milliseconds);
+    }
+
+    private void SimulateQualify()
+    {
+        _qualifyResults = new List<QualifyResult>();
+        foreach (var team in teams)
+        {
+            foreach (var driver in team.Drivers)
+            {
+                _qualifyResults.Add(new QualifyResult
+                    {
+                        Driver = driver,
+                        Team = team,
+                        TimeMs = CalcTime(_currentCircuit, team, driver)
+                    });
+            }
+        }
+        this.StateHasChanged();
+    }
+
+    private int CalcTime(Circuit circuit, RaceTeam team, RaceDriver driver)
+    {
+        return (int)(circuit.OptimalLaptimeMs *
+            (1+(
+                (((100 - team.Rating) * 0.002)) +
+                (((100 - driver.QualifyPace) * 0.002))
+
+            ))
+        );
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var circuits = await Http.GetFromJsonAsync<List<Circuit>>("/api/circuits") ?? new List<Circuit>();
+            teams = await Http.GetFromJsonAsync<RaceTeam[]>("/api/teams") ?? new RaceTeam[] { };
+            _currentCircuit = circuits.FirstOrDefault() ?? new Circuit();
+            this.StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+        }
+    }
+}
