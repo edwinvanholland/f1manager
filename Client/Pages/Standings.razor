@@ -1,0 +1,70 @@
+﻿@page "/standings"
+@using BlazorApp.Shared.Models
+@inject HttpClient Http
+
+<h1>Standings</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (teams == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <h2>Teams</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var team in teams)
+            {
+                <tr>
+                    <td>@team.Name</td>
+                    <td>@team.Rating</td>                    
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>Drivers</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var driver in drivers)
+            {
+                <tr>
+                    <td>@driver.Name</td>
+                    <td>@driver.Rating</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private RaceTeam[] teams = new RaceTeam[] { };
+    private List<RaceDriver> drivers = new List<RaceDriver>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            teams = await Http.GetFromJsonAsync<RaceTeam[]>("/api/teams") ?? new RaceTeam[] { };
+            // drivers = await Http.GetFromJsonAsync<List<RaceDriver>>("/api/drivers") ?? new List<RaceDriver>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+        }
+    }
+}
