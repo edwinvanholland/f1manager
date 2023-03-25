@@ -8,6 +8,7 @@
 <h2>@_currentCircuit.Name (@_currentCircuit.Country)</h2>
 
 <button class="btn btn-primary" @onclick="SimulateQualify">Simulate Qualify</button>
+<button class="btn btn-primary" @onclick="SimulateRace">Simulate Race</button>
 
 @if (_qualifyResults != null && _qualifyResults.Any())
 {
@@ -40,6 +41,47 @@
     </table>
 }
 
+@if (_raceResults != null && _raceResults.Any())
+{
+    <h2>Race Results</h2>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Driver</th>
+                <th>Team</th>
+                <th>Time</th>
+                <th>Delta</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var rank = 1;
+                var prevTime = 0;
+            }
+            @foreach (var result in _raceResults.OrderBy(q => q.TimeMs))
+            {
+                <tr>
+                    <td>@rank</td>
+                    <td>@result.Driver.Name</td>
+                    <td>@result.Team.Name</td>
+                    <td>@RenderRacetime(result.TimeMs)</td>
+                    @if (prevTime == 0 || result.TimeMs == Int32.MaxValue)
+                    {
+                        <td>&nbsp;</td>
+                    }
+                    else
+                    {
+                        <td>@RenderDelta(result.TimeMs-prevTime)</td>
+                    }
+                </tr>
+                prevTime = result.TimeMs;
+                rank++;
+            }
+        </tbody>
+    </table>
+}
 
 
 @code {
@@ -47,11 +89,28 @@
     private Circuit _currentCircuit = new Circuit();
     private RaceTeam[] teams = new RaceTeam[] { };
     private List<QualifyResult> _qualifyResults = new();
+    private List<QualifyResult> _raceResults = new();
+    private Random randomizer = new Random(1000); // fixed seed for testing
 
     private string RenderLaptime(int laptimeInMs)
     {
         var t = TimeSpan.FromMilliseconds(laptimeInMs);
         return String.Format("{0:D2}:{1:D2}.{2:D3}", t.Minutes, t.Seconds, t.Milliseconds);
+    }
+
+    private string RenderRacetime(int totalTimeMs)
+    {
+        if (totalTimeMs == Int32.MaxValue)
+            return "DNF";
+
+        var t = TimeSpan.FromMilliseconds(totalTimeMs);
+        return String.Format("{0:D2}:{1:D2}:{2:D3}.{3:D3}", t.Hours, t.Minutes, t.Seconds, t.Milliseconds);
+    }
+
+    private string RenderDelta(int totalTimeMs)
+    {
+        var t = TimeSpan.FromMilliseconds(totalTimeMs);
+        return String.Format("+{0:D2}:{1:D2}:{2:D3}", t.Minutes, t.Seconds, t.Milliseconds);
     }
 
     private void SimulateQualify()
@@ -65,21 +124,63 @@
                     {
                         Driver = driver,
                         Team = team,
-                        TimeMs = CalcTime(_currentCircuit, team, driver)
+                        TimeMs = CalcQualifyTime(_currentCircuit, team, driver)
                     });
             }
         }
         this.StateHasChanged();
     }
 
-    private int CalcTime(Circuit circuit, RaceTeam team, RaceDriver driver)
+    private async Task SimulateRace()
+    {
+        _raceResults = new List<QualifyResult>();
+        foreach (var team in teams)
+        {
+            foreach (var driver in team.Drivers)
+            {
+                var result = new QualifyResult
+                    {
+                        Driver = driver,
+                        Team = team,
+                        TimeMs = CalcRaceTime(_currentCircuit, team, driver)
+                    };
+
+                // Durabilty
+                if (randomizer.Next(100) > team.Durability)
+                    result.TimeMs = int.MaxValue;
+
+                _raceResults.Add(result);
+            }
+        }
+
+        await Http.PostAsJsonAsync<List<QualifyResult>>("/api/race", _raceResults);
+        this.StateHasChanged();
+    }
+
+    private void AssignPoints(List<QualifyResult> results)
+    {
+     
+        this.StateHasChanged();
+    }
+
+    private int CalcQualifyTime(Circuit circuit, RaceTeam team, RaceDriver driver)
     {
         return (int)(circuit.OptimalLaptimeMs *
-            (1+(
-                (((100 - team.Rating) * 0.002)) +
-                (((100 - driver.QualifyPace) * 0.002))
+            (1 + (
+                (((100 - team.Rating) * 0.001)) +
+                (((100 - driver.QualifyPace) * 0.0005))
 
             ))
+        );
+    }
+
+    private int CalcRaceTime(Circuit circuit, RaceTeam team, RaceDriver driver)
+    {
+        return (int)(circuit.OptimalLaptimeMs *
+            (1 + (
+                (((100 - team.Rating) * 0.001)) +
+                (((100 - driver.RacePace) * 0.0005))
+            )) * (circuit.Laps * (1 + (100 - driver.Experience) / 1000)) // 50 xp received a 5% increased time
         );
     }
 

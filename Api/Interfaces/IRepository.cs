@@ -6,8 +6,9 @@ namespace Api.Interfaces
     public interface IRepository
     {
 
-        public List<RaceDriver> GetDrivers();
-        public List<RaceTeam> GetTeams();
-        public List<Circuit> GetCircuits();
+        List<RaceDriver> GetDrivers();
+        List<RaceTeam> GetTeams();
+        List<Circuit> GetCircuits();
+        void UpdateRaceStats(List<QualifyResult> results);
     }
 }

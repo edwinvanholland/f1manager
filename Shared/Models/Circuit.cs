@@ -4,6 +4,8 @@
     {
         public string Name { get; set; }
         public string Country { get; set; }
+        public int Laps { get; set; }
+
         public int EngineFactor { get; set; }
         public int AeroFactor { get; set; }
         public int ChassisFactor { get; set; }

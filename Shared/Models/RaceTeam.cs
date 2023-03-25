@@ -13,5 +13,7 @@ namespace BlazorApp.Shared.Models
         public double Rating => (double)((Engine+Aero+Chassis)/3);
 
         public List<RaceDriver> Drivers { get; set; } = new List<RaceDriver>();
+
+        public int Points { get; set; }
     }
 }

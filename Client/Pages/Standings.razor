@@ -17,15 +17,17 @@ else
         <thead>
             <tr>
                 <th>Name</th>
+                <th>Points</th>
                 <th>Rating</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var team in teams.OrderByDescending(d => d.Rating))
+            @foreach (var team in teams.OrderByDescending(d => d.Points).ThenByDescending(d => d.Rating))
             {
                 <tr>
                     <td>@team.Name</td>
-                    <td>@team.Rating</td>                    
+                    <td>@team.Points</td>
+                    <td>@team.Rating</td>
                 </tr>
             }
         </tbody>
@@ -36,14 +38,16 @@ else
         <thead>
             <tr>
                 <th>Name</th>
+                <th>Points</th>
                 <th>Rating</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var driver in drivers.OrderByDescending(d => d.Rating))
+            @foreach (var driver in drivers.OrderByDescending(d => d.Points).ThenByDescending(d => d.Rating))
             {
                 <tr>
                     <td>@driver.Name</td>
+                    <td>@driver.Points</td>
                     <td>@driver.Rating</td>
                 </tr>
             }

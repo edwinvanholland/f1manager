@@ -1,6 +1,5 @@
 ﻿using Api.Interfaces;
 using BlazorApp.Shared.Models;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -50,10 +49,10 @@ namespace Api
                                     new RaceDriver {Name = "Esteban Ocon", Aggressiveness = 80, Experience = 80, Pace = 75, Racecraft = 81 }
                             }
                         },
-                        new RaceTeam {Name = "Alpha Tauri", Aero = 82, Engine = 90, Durability = 80, Chassis = 65,
+                        new RaceTeam {Name = "Alpha Tauri", Aero = 82, Engine = 90, Durability = 80, Chassis = 70,
                                 Drivers = new() {
-                                    new RaceDriver {Name = "Yuki Tsunoda", Aggressiveness = 80, Experience = 70, Pace = 75, Racecraft = 65 },
-                                    new RaceDriver {Name = "Nyck de Vries", Aggressiveness = 65, Experience = 50, Pace = 70, Racecraft = 60 }
+                                    new RaceDriver {Name = "Yuki Tsunoda", Aggressiveness = 80, Experience = 70, Pace = 77, Racecraft = 65 },
+                                    new RaceDriver {Name = "Nyck de Vries", Aggressiveness = 70, Experience = 50, Pace = 73, Racecraft = 60 }
                             }
                         },
                         new RaceTeam {Name = "Williams", Aero = 85, Engine = 88, Durability = 85, Chassis = 75,
@@ -78,7 +77,7 @@ namespace Api
 
             _circuits = new List<Circuit>
             {
-                new Circuit{ Name = "Bahrain International", AeroFactor = 90, Country = "Bahrain", ChassisFactor = 50, EngineFactor = 90, OptimalLaptimeMs = 90000}
+                new Circuit{ Name = "Bahrain International", Laps = 57, AeroFactor = 90, Country = "Bahrain", ChassisFactor = 50, EngineFactor = 90, OptimalLaptimeMs = 90000}
             };
         }
 
@@ -101,5 +100,30 @@ namespace Api
 
         public List<RaceTeam> GetTeams() => _teams;
 
+        private readonly Dictionary<int, int> PointsTable = new Dictionary<int, int>
+        {
+            { 1,25},
+            { 2,18},
+            { 3,15},
+            { 4,12},
+            { 5,10},
+            { 6,8},
+            { 7,6},
+            { 8,4},
+            { 9,2},
+            { 10,1}
+        };
+
+        public void UpdateRaceStats(List<QualifyResult> results)
+        {
+            var sorted = results.OrderBy(x => x.TimeMs).ToList();
+            for (int i = 0; i < 10; i++)
+            {
+                var team = _teams.First(t => t.Name == sorted[i].Team.Name);
+                var driver = team.Drivers.First(d => d.Name == sorted[i].Driver.Name);
+                driver.Points += PointsTable[i + 1];
+                team.Points += PointsTable[i + 1];
+            }
+        }
     }
 }
